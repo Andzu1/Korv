@@ -1,0 +1,26 @@
+library('Quandl')
+mydata0<-Quandl('USTREASURY/YIELD', type='raw',order='asc',
+                start_date='2016-03-14',end_date='2018-03-14')
+str(mydata0)
+mydata0<-mydata0[,-c(1)]
+mydata<-mydata0/100
+maturity<-c(c(1:3,6)/12,1:3,5,7,10,20,30)
+myforward<-NULL #for collecting all the forward rates
+for(k in 1:nrow(mydata))
+{
+  yy<-as.numeric(mydata[k,])
+  #extract k-th row from 'mydata', convert to a numeric Rvector, assign to 'yy'
+  ff<-c(yy[1],yy[-1]+maturity[-length(maturity)]*diff(yy)/diff(maturity))
+  # formula (3)
+  myforward<-rbind(myforward,ff)
+  #append 'ff' to 'myforward', row-wise, and update 'myforward'
+}
+
+myforward<-data.frame(myforward)
+colnames(myforward)<-colnames(mydata)
+rownames(myforward)<-rownames(mydata)
+
+help("approx")
+OGyield<-mydata[1,]
+TWOMO<-approx(x=maturity, y=OGyield, 2/12)
+dosmon<-TWOMO[["y"]]

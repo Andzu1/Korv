@@ -1,0 +1,30 @@
+library('Quandl')
+mydata0<-Quandl('USTREASURY/YIELD', type='raw',order='asc',
+                start_date='2016-03-14',end_date='2018-03-14')
+str(mydata0)
+mydata0<-mydata0[,-c(1)]
+mydata<-mydata0/100
+maturity<-c(c(1:3,6)/12,1:3,5,7,10,20,30)
+
+#APPROXIMATION OF 2 MONTH
+OGyield<-mydata[1,]
+TWOMO<-approx(x=maturity, y=OGyield, 2/12)
+dosmon<-TWOMO[["y"]]
+mydata1<-mydata[1,]
+mydata1$`2 MO`<-dosmon
+yield<-mydata1
+yield2<-as.numeric(yield)
+
+bondcalc<-yield*maturity
+bondprice<-exp(-bondcalc)
+bondprice2<-as.numeric(bondprice)
+# HOW TO DUBBELKOLLA
+#yield2<- -log(bondprice)/maturity
+
+#an alternative way of computing the forward rate
+forwardalt<-c(yield2[1],
+              yield2[-1]+maturity[-length(maturity)]*diff(yield2)/diff(maturity)
+) #formula (3)
+#maturity[-length(maturity)] drops the last element from ’maturity’
+#yield[-1] drops the first element from ’yield’
+View(forwardalt)
